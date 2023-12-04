@@ -1,0 +1,70 @@
+{
+    "defaultSeverity": "error",
+    "extends": "strictts/tslint.json",
+    "linterOptions": {
+        "exclude": [
+            "src/core/csstype.ts"
+        ]
+    },
+    "rules": {
+        "ban": [
+            true,
+            "eval",
+            "uneval",
+            {
+                "message": "Use strict parseNum from core/lang",
+                "name": "parseInt"
+            },
+            {
+                "message": "Use strict parseNum from core/lang",
+                "name": "parseFloat"
+            },
+            {
+                "message": "Use _.delay instead",
+                "name": "setTimeout"
+            },
+            {
+                "message": "Do not run code in a native interval loop since it swallows runtime exceptions. Run in useClock.",
+                "name": "setInterval"
+            }
+        ],
+        "completed-docs": false,
+        "cyclomatic-complexity": [
+            true,
+            33
+        ],
+        "interface-over-type-literal": false,
+        "jsdoc-format": false,
+        "max-file-line-count": [
+            true,
+            1000
+        ],
+        "no-implicit-dependencies": [
+            true,
+            [
+                "env",
+                "csstype",
+                "react-test-renderer",
+                "@testing-library"
+            ]
+        ],
+        "no-inferred-empty-object-type": false,
+        "no-submodule-imports": [
+            true,
+            "ui",
+            "@jest"
+        ],
+        "no-unbound-method": false,
+        "space-before-function-paren": [
+            false,
+            {
+                "asyncArrow": "always"
+            }
+        ],
+        "strict-boolean-expressions": false,
+        "typedef": [
+            true,
+            "call-signature"
+        ]
+    }
+}

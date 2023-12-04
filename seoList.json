@@ -1,0 +1,22 @@
+{
+    "testomato": [
+        {
+            "url": "https://www.poptop.uk.com/",
+            "responseCode": 200,
+            "title": "Poptop UK - All For Home & Garden Private Parties",
+            "htmlContains": [
+                "<h1 class=kruerivgiergv></h1>",
+                "<link rel=\"canonical\"     href=\"https://www.poptop.uk.com/\" />"
+            ],
+            "description": "Extraordinary private party experiences and services. ",
+            "schema": [
+                "<scripttype=\"application/ld+json\">{\"@context\":\"http://schema.org/\",\"@type\":\"LocalBusiness\":"
+            ],
+            "redirect": "https://www.poptop.uk.com/"
+        },
+        {
+            "url": "https://www.poptop.uk.com/suppliers/photographer/photobooth/",
+            "responseCode": 200
+        }
+    ]
+}

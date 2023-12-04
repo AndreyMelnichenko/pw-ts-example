@@ -1,0 +1,68 @@
+.with-docker:
+  image: docker:20.10.8
+  interruptible: true
+  variables:
+    DOCKER_HOST: tcp://dind.default.svc.cluster.local:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_IMAGE: registry.gitlab.com/poptop/tests:latest
+    CI: "true"
+    TAG: "@smoke"
+    TR: "false"
+    TR_DATA: "NO_TR_DATA"
+    BASE_URL: "EMPTY_CI_URL"
+    BROWSER: "chrome+android"
+    CI_DEBUG_TRACE: "false"
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  tags:
+    - k8s-stage-latest
+
+stages:
+  - lint
+  - test
+  - cleanup
+
+Lint:
+  extends: .with-docker
+  stage: lint
+  only:
+    - main
+    - merge_requests
+  before_script:
+    - echo export SECRET_PASSWORD=$SECRET_PASSWORD > .vars
+  script:
+    - git submodule update --recursive && ls -la .vscode
+    - docker build --network host -t $DOCKER_IMAGE .
+    - docker run --rm -dit --name $CI_PIPELINE_ID --net=host -v $PWD:$PWD $DOCKER_IMAGE sh
+    - docker exec -i $CI_PIPELINE_ID bash -c "ls -la && . .vars && echo \$SECRET_PASSWORD | gpg --batch --passphrase-fd 0 --yes -d creds.json.gpg > creds.json"
+    - docker exec -i $CI_PIPELINE_ID bash -c "npm run lint"
+
+E2E:
+  extends: .with-docker
+  stage: test
+  needs: [Lint]
+  only:
+    - main
+    - merge_requests
+  script:
+    - if [ $CI_PIPELINE_SOURCE == 'push' ]; then TAG='@ping'; fi
+    - if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ]; then TAG='@C71 or @C62 or @C14 or @C57 or @C38 or @C20 or @C44 or @C116 or @C49 or @C117 or @C105' BROWSER='chrome'; fi
+    - if [ $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == 'hotfix' ]; then TAG='@C38 or @C1 or @C24 or @C62'; fi
+    - if [ $CI_PIPELINE_SOURCE != 'push' ]; then docker exec -i $CI_PIPELINE_ID bash -c "srcBranch=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME dstBranch=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME mrId=$CI_MERGE_REQUEST_IID sha=$CI_COMMIT_SHA approver=$GITLAB_USER_EMAIL buildId=$CI_JOB_ID buildUrl=$CI_JOB_URL run=$CI_PIPELINE_SOURCE tag='$TAG' tr=$TR tr_data='$TR_DATA' ci=$CI url=$BASE_URL browser=$BROWSER ./run.sh"; fi
+  after_script:
+    - docker cp $CI_PIPELINE_ID:/home/ciUser/tests/html-report $CI_PROJECT_DIR/html-report
+  artifacts:
+    when: always
+    paths:
+      - html-report
+
+Cleanup:
+  extends: .with-docker
+  stage: cleanup
+  needs: [E2E]
+  only:
+    - main
+    - merge_requests
+  script:
+    - docker stop $CI_PIPELINE_ID || true
+  when: always
